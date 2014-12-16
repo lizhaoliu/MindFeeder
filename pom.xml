@@ -100,6 +100,15 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<plugin>
+				<groupId>com.heroku.sdk</groupId>
+				<artifactId>heroku-maven-plugin</artifactId>
+				<version>0.1.9</version>
+				<configuration>
+					<appName>mind-feeder</appName>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 </project>
