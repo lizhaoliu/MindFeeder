@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html ng-app="" ng-init="page=0">
+<head>
+  <meta charset="UTF-8">
+  <title>Mind Feeder</title>
+
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container" ng-controller="newsEntriesController">
+  <div>
+    <h1>Mind Feeder</h1>
+  </div>
+  <table class="table table-striped">
+    <tr ng-repeat="e in newsEntries.content">
+      <td>
+        <p>
+						<span class="glyphicon glyphicon-globe">
+              <a href="{{e.link}}"> {{e.title}} </a>
+            </span>
+        </p>
+      </td>
+    </tr>
+  </table>
+  <button type="button" class="btn btn-default" ng-click="prevPage()">prev</button>
+  <button type="button" class="btn btn-default" ng-click="nextPage()">next</button>
+</div>
+
+<script
+  src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script>
+		function newsEntriesController($scope, $http) {
+			goToPage($scope, $http);
+			$scope.prevPage = function() {
+        if ($scope.page > 0) {
+          $scope.page -= 1;
+          goToPage($scope, $http);
+        }
+			}
+			$scope.nextPage = function() {
+        if ($scope.page < $scope.totalPages - 1) {
+          $scope.page += 1;
+          goToPage($scope, $http);
+        }
+			}
+		}
+
+		function goToPage($scope, $http) {
+		  $http.get("/rest/news?page=" + $scope.page).success(function(resp) {
+				$scope.newsEntries = resp;
+				$scope.totalPages = resp.totalPages;
+			});
+		}
+</script>
+</body>
+</html>
