@@ -15,10 +15,11 @@
   <table class="table table-striped">
     <tr ng-repeat="e in newsEntries.content">
       <td>
-        <p>
-						<span class="glyphicon glyphicon-globe">
-              <a href="{{e.link}}"> {{e.title}} </a>
-            </span>
+        <span class="glyphicon glyphicon-globe">
+          <a href="{{e.link}}"> {{e.title}}</a>
+        </span>
+        <p class="text-muted">
+          <small>{{e.source}}</small>
         </p>
       </td>
     </tr>
@@ -53,6 +54,12 @@
 				$scope.totalPages = resp.totalPages;
 			});
 		}
+
+
+
+
+
+
 </script>
 </body>
 </html>

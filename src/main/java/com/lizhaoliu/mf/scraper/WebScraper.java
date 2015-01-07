@@ -1,7 +1,7 @@
 package com.lizhaoliu.mf.scraper;
 
 /**
- * 
+ *
  */
 public interface WebScraper {
 

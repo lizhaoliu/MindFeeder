@@ -1,30 +1,28 @@
 package com.lizhaoliu.mf.scraper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 
 @EnableScheduling
-@Component
+@Service
 public class ScraperService {
 
   private static final Logger logger = LoggerFactory.getLogger(ScraperService.class);
 
   private List<? extends WebScraper> scraperList = ImmutableList.of(
-      new RedditScraper("http://www.reddit.com/r/programming", "http://www.reddit.com/r/coding")
-      );
+    new RedditScraper("http://www.reddit.com/r/programming",
+      "http://www.reddit.com/r/java/",
+      "http://www.reddit.com/r/startups"),
+    new HackerNewsScraper("https://news.ycombinator.com/")
+  );
 
   private ExecutorService exec = Executors.newCachedThreadPool(new ThreadFactory() {
     @Override
@@ -35,9 +33,9 @@ public class ScraperService {
     }
   });
 
-  @Scheduled(fixedRate = 1L * 1000 * 1800, initialDelay = 5L * 1000)
+  @Scheduled(fixedRate = 1L * 1000 * 1800, initialDelay = 3000L)
   public void scrapePages() {
-    List<Future<?>> futures = new ArrayList<Future<?>>();
+    List<Future<?>> futures = new ArrayList<>();
     for (final WebScraper scraper : scraperList) {
       logger.info("Started scraping scheduled task");
       Future<?> future = exec.submit(new Runnable() {
