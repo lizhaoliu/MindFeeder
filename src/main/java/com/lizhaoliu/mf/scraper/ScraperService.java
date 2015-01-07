@@ -20,7 +20,7 @@ public class ScraperService {
   private List<? extends WebScraper> scraperList = ImmutableList.of(
     new RedditScraper("http://www.reddit.com/r/programming",
       "http://www.reddit.com/r/java/",
-      "http://www.reddit.com/r/startups"),
+      "http://www.reddit.com/r/coding"),
     new HackerNewsScraper("https://news.ycombinator.com/")
   );
 
@@ -33,6 +33,9 @@ public class ScraperService {
     }
   });
 
+  /**
+   * initialDelay is to offset the time initializing ApplicationContext
+   */
   @Scheduled(fixedRate = 1L * 1000 * 1800, initialDelay = 3000L)
   public void scrapePages() {
     List<Future<?>> futures = new ArrayList<>();

@@ -28,6 +28,9 @@ public class HackerNewsScraper extends AbstractWebScraper {
       try {
         WebElement a = e.findElement(By.cssSelector("a"));
         NewsEntry entry = new NewsEntry();
+        if (a.getText().equalsIgnoreCase("more")) {
+          continue;
+        }
         entry.setTitle(a.getText());
         entry.setLink(a.getAttribute(HREF));
         entry.setDateTime(new DateTime().toString(DATETIME_FORMAT));
