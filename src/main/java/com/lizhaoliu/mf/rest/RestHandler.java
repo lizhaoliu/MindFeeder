@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 @RestController
 @RequestMapping("/rest")
@@ -22,6 +24,9 @@ public class RestHandler {
   @Autowired
   private NewsEntryRepository newsEntryRepository;
 
+  @Autowired
+  private JedisPool jedisPool;
+
   /**
    * Get JSON object of news
    *
@@ -30,7 +35,17 @@ public class RestHandler {
   @RequestMapping(value = "/news", method = RequestMethod.GET)
   @ResponseBody
   public Object getNews(@RequestParam(value = "page") int page) {
-    return newsEntryRepository.findAll(new PageRequest(page,
-      PAGE_SIZE, Sort.Direction.DESC, "dateTime"));
+    Jedis jedis = jedisPool.getResource();
+    try {
+      final String key = "/news" + page;
+      final String jsonResp = jedis.get(key);
+      if (jsonResp == null) {
+        return newsEntryRepository.findAll(new PageRequest(page,
+          PAGE_SIZE, Sort.Direction.DESC, "dateTime"));
+      }
+      return jsonResp;
+    } finally {
+      jedisPool.returnResource(jedis);
+    }
   }
 }
