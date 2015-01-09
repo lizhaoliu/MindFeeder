@@ -21,7 +21,9 @@ public class ScraperService {
     new RedditScraper("http://www.reddit.com/r/programming",
       "http://www.reddit.com/r/java/",
       "http://www.reddit.com/r/coding"),
-    new HackerNewsScraper("https://news.ycombinator.com/")
+    new HackerNewsScraper("https://news.ycombinator.com/"),
+    new InfoQScraper("http://www.infoq.com/news/",
+      "http://www.infoq.com/cn/news")
   );
 
   private ExecutorService exec = Executors.newCachedThreadPool(new ThreadFactory() {
