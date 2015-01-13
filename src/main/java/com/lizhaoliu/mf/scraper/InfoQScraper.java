@@ -21,7 +21,7 @@ public class InfoQScraper extends AbstractWebScraper {
 
   @Nonnull
   @Override
-  Iterable<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver) {
+  List<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver) {
     List<NewsEntry> results = new ArrayList<>();
     for (WebElement e : webDriver.findElements(By.className("news_type_block"))) {
       WebElement a = e.findElement(By.cssSelector("h2")).findElement(By.cssSelector("a"));
@@ -33,5 +33,10 @@ public class InfoQScraper extends AbstractWebScraper {
       results.add(entry);
     }
     return results;
+  }
+
+  @Override
+  public String toString() {
+    return "InfoQ Scraper";
   }
 }

@@ -1,8 +1,14 @@
-package com.lizhaoliu.mf.scraper;
+package com.lizhaoliu.mf.service;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Queues;
 import com.lizhaoliu.mf.model.NewsEntry;
 import com.lizhaoliu.mf.model.NewsEntryRepository;
+import com.lizhaoliu.mf.scraper.HackerNewsScraper;
+import com.lizhaoliu.mf.scraper.InfoQScraper;
+import com.lizhaoliu.mf.scraper.RedditScraper;
+import com.lizhaoliu.mf.scraper.WebScraper;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +22,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +35,8 @@ public class ScraperService {
   private static final Logger logger = LoggerFactory.getLogger(ScraperService.class);
 
   private static final int PAGE_SIZE = 20;
+
+  private final BlockingQueue<NewsEntry> newsEntryBlockingQueue = Queues.newLinkedBlockingQueue();
 
   @Autowired
   private JedisPool jedisPool;
@@ -55,18 +64,44 @@ public class ScraperService {
 
   private ExecutorService exec = Executors.newCachedThreadPool(new ThreadFactory() {
     @Override
-    public Thread newThread(Runnable r) {
-      Thread t = new Thread(r);
-      t.setDaemon(true);
-      return t;
+    public Thread newThread(Runnable runnable) {
+      Thread thread = new Thread(runnable);
+      thread.setName("ScraperServiceWorker");
+      thread.setDaemon(true);
+      return thread;
     }
   });
+
+  /**
+   * Add an instance of {@link com.lizhaoliu.mf.model.NewsEntry} into entity queue which will be saved into DB
+   *
+   * @param newsEntry instance of an {@link com.lizhaoliu.mf.model.NewsEntry}
+   * @return true if the element was successfully added to the entity queue, else false
+   */
+  public boolean save(@Nonnull NewsEntry newsEntry) {
+    Preconditions.checkNotNull(newsEntry, "newsEntry should not be null.");
+
+    return newsEntryBlockingQueue.offer(newsEntry);
+  }
+
+  /**
+   * Stop the scraper service
+   */
+  public void stop() {
+    exec.shutdownNow();
+  }
 
   /**
    * initialDelay is to offset the time initializing ApplicationContext
    */
   @Scheduled(fixedRate = 1L * 1000 * 1800, initialDelay = 3000L)
   public void scrapePages() {
+    doScrapePages();
+    updateDb();
+    updateCache();
+  }
+
+  private void doScrapePages() {
     List<Future<?>> futures = new ArrayList<>();
     for (final WebScraper scraper : scraperList) {
       logger.info("Started scraping scheduled task");
@@ -86,13 +121,30 @@ public class ScraperService {
         logger.error("An error occured while scraping page: ", e);
       }
     }
-    updateCache();
+  }
+
+  private void updateDb() {
+    int numSaved = 0;
+    while (!newsEntryBlockingQueue.isEmpty()) {
+      NewsEntry newsEntry = null;
+      try {
+        newsEntry = newsEntryBlockingQueue.take();
+        if (newsEntryRepository.findByLink(newsEntry.getLink()) == null) {
+          newsEntryRepository.save(newsEntry);
+          ++numSaved;
+        }
+      } catch (Exception e) {
+        logger.warn(String.format("An exception happened while taking and saving %s from the queue: ", newsEntry) +
+          e.getMessage());
+      }
+    }
+    logger.info(String.format("Completed saving %d entities into database", numSaved));
   }
 
   private void updateCache() {
     Jedis jedis = jedisPool.getResource();
     try {
-      Page<NewsEntry> page = null;
+      Page<NewsEntry> page;
       for (int pageId = 0;
            (page = newsEntryRepository.findAll(new PageRequest(pageId, PAGE_SIZE, Sort.Direction.DESC, "dateTime")))
              .getNumberOfElements() > 0;
@@ -103,15 +155,11 @@ public class ScraperService {
           jedis.set(key, json);
           logger.info("Updated Redis on key = " + key);
         } catch (IOException e) {
-          logger.warn("Failed to update cache: ", e);
+          logger.warn("Failed to update Redis: " + e.getMessage());
         }
       }
     } finally {
       jedisPool.returnResource(jedis);
     }
-  }
-
-  public void stop() {
-    exec.shutdownNow();
   }
 }

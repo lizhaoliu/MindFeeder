@@ -28,7 +28,7 @@ public class RestHandler {
   private JedisPool jedisPool;
 
   /**
-   * Get JSON object of news
+   * Return the JSON object of paginated news feeds
    *
    * @return
    */

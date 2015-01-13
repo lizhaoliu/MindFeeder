@@ -19,7 +19,7 @@ public class RedditScraper extends AbstractWebScraper {
   }
 
   @Override
-  Iterable<NewsEntry> getEntitiesFromPage(WebDriver webDriver) {
+  List<NewsEntry> getEntitiesFromPage(WebDriver webDriver) {
     List<NewsEntry> results = new ArrayList<>();
     for (WebElement e : webDriver.findElements(By.className("title.may-blank"))) {
       NewsEntry entry = new NewsEntry();

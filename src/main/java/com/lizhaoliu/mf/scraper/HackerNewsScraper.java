@@ -22,7 +22,7 @@ public class HackerNewsScraper extends AbstractWebScraper {
 
   @Nonnull
   @Override
-  Iterable<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver) {
+  List<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver) {
     List<NewsEntry> results = new ArrayList<>();
     for (WebElement e : webDriver.findElements(By.cssSelector("td.title"))) {
       try {
@@ -41,5 +41,10 @@ public class HackerNewsScraper extends AbstractWebScraper {
       }
     }
     return results;
+  }
+
+  @Override
+  public String toString() {
+    return "HackerNews Scraper";
   }
 }

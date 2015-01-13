@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.lizhaoliu.mf.app.Application;
 import com.lizhaoliu.mf.model.NewsEntry;
-import com.lizhaoliu.mf.model.NewsEntryRepository;
+import com.lizhaoliu.mf.service.ScraperService;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,27 +36,15 @@ public abstract class AbstractWebScraper implements WebScraper {
   public void scrapePage() {
     logger.info("URLs to be scraped: " + urlList);
     WebDriver webDriver = Application.getApplicationContext().getBean(WebDriver.class);
-    NewsEntryRepository newsEntryRepo = Application.getApplicationContext().getBean(NewsEntryRepository.class);
-    try {
-      for (String source : urlList) {
-        logger.info("Started scraping: " + source);
-        webDriver.get(source);
-        Iterable<NewsEntry> newsEntries = getEntitiesFromPage(webDriver);
-        logger.info("Finished scraping: " + source);
-        for (NewsEntry e : newsEntries) {
-          try {
-            if (newsEntryRepo.findByLink(e.getLink()) == null) {
-              newsEntryRepo.save(decorateFields(e));
-            }
-          } catch (Exception e2) {
-            logger.warn("An exception happened while saving: " + e, e2.getMessage());
-          }
-        }
-        logger.info("Stored into database.");
-        Thread.sleep(100L);
+    ScraperService scraperService = Application.getApplicationContext().getBean(ScraperService.class);
+    for (String source : urlList) {
+      logger.info("Started scraping: " + source);
+      webDriver.get(source);
+      Iterable<NewsEntry> newsEntries = getEntitiesFromPage(webDriver);
+      logger.info("Finished scraping: " + source);
+      for (NewsEntry e : newsEntries) {
+        scraperService.save(decorateFields(e));
       }
-    } catch (InterruptedException e) {
-      logger.debug("Scraping task has been interrupted.");
     }
     webDriver.quit();
     logger.info("WebDriver has quited.");
@@ -83,9 +71,9 @@ public abstract class AbstractWebScraper implements WebScraper {
    * Parse the page source fetched by {@link WebDriver} and return a
    * {@link Iterable} collection of entities
    *
-   * @param webDriver the {@link WebDriver} which has <b>already got the page source</b>
-   * @return an {@link Iterable} collection of scraped entities
+   * @param webDriver the {@link org.openqa.selenium.WebDriver} which has <b>already got the page source</b>
+   * @return a {@link java.util.List} of scraped entities
    */
   @Nonnull
-  abstract Iterable<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver);
+  abstract List<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver);
 }
