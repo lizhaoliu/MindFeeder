@@ -5,7 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.lizhaoliu.mf.app.Application;
 import com.lizhaoliu.mf.model.NewsEntry;
 import com.lizhaoliu.mf.service.ScraperService;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +17,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Skeleton implementation of web scraper
+ */
 public abstract class AbstractWebScraper implements WebScraper {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractWebScraper.class);
@@ -23,6 +29,8 @@ public abstract class AbstractWebScraper implements WebScraper {
   static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
   static final String HREF = "href";
+
+  static final String CSS_SEL_FAVICON = "link[href$='.ico']";
 
   private final List<String> urlList;
 
@@ -43,6 +51,7 @@ public abstract class AbstractWebScraper implements WebScraper {
       Iterable<NewsEntry> newsEntries = getEntitiesFromPage(webDriver);
       logger.info("Finished scraping: " + source);
       for (NewsEntry e : newsEntries) {
+        addFavicon(e, webDriver);
         scraperService.save(decorateFields(e));
       }
     }
@@ -67,6 +76,16 @@ public abstract class AbstractWebScraper implements WebScraper {
     return e;
   }
 
+  private void addFavicon(NewsEntry e, WebDriver webDriver) {
+    try {
+      WebElement webElement = webDriver.findElement(By.cssSelector(CSS_SEL_FAVICON));
+      String favicon = webElement.getAttribute(HREF);
+      e.setFavicon(favicon);
+    } catch (NoSuchElementException ex) {
+      // Intentionally ignored
+    }
+  }
+
   /**
    * Parse the page source fetched by {@link WebDriver} and return a
    * {@link Iterable} collection of entities
@@ -75,5 +94,5 @@ public abstract class AbstractWebScraper implements WebScraper {
    * @return a {@link java.util.List} of scraped entities
    */
   @Nonnull
-  abstract List<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver);
+  protected abstract List<NewsEntry> getEntitiesFromPage(WebDriver webDriver);
 }

@@ -26,7 +26,12 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 
 @EnableScheduling
 @Service
@@ -48,18 +53,18 @@ public class ScraperService {
   private ObjectMapper objectMapper;
 
   private List<? extends WebScraper> scraperList = ImmutableList.of(
-    new RedditScraper(
-      "http://www.reddit.com/r/programming",
-      "http://www.reddit.com/r/java/",
-      "http://www.reddit.com/r/coding"
-    ),
-    new HackerNewsScraper(
-      "https://news.ycombinator.com/"
-    ),
-    new InfoQScraper(
-      "http://www.infoq.com/news/"
+      new RedditScraper(
+          "http://www.reddit.com/r/programming",
+          "http://www.reddit.com/r/java/",
+          "http://www.reddit.com/r/coding"
+      ),
+      new HackerNewsScraper(
+          "https://news.ycombinator.com/"
+      ),
+      new InfoQScraper(
+          "http://www.infoq.com/news/"
 //      "http://www.infoq.com/cn/news"
-    )
+      )
   );
 
   private ExecutorService exec = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -105,12 +110,9 @@ public class ScraperService {
     List<Future<?>> futures = new ArrayList<>();
     for (final WebScraper scraper : scraperList) {
       logger.info("Started scraping scheduled task");
-      Future<?> future = exec.submit(new Runnable() {
-        @Override
-        public void run() {
-          logger.info(scraper.toString() + " has started.");
-          scraper.scrapePage();
-        }
+      Future<?> future = exec.submit(() -> {
+        logger.info(scraper.toString() + " has started.");
+        scraper.scrapePage();
       });
       futures.add(future);
     }
@@ -135,7 +137,7 @@ public class ScraperService {
         }
       } catch (Exception e) {
         logger.warn(String.format("An exception happened while taking and saving %s from the queue: ", newsEntry) +
-          e.getMessage());
+            e.getMessage());
       }
     }
     logger.info(String.format("Completed saving %d entities into database", numSaved));
@@ -147,7 +149,7 @@ public class ScraperService {
       Page<NewsEntry> page;
       for (int pageId = 0;
            (page = newsEntryRepository.findAll(new PageRequest(pageId, PAGE_SIZE, Sort.Direction.DESC, "dateTime")))
-             .getNumberOfElements() > 0;
+               .getNumberOfElements() > 0;
            ++pageId) {
         try {
           final String json = objectMapper.writeValueAsString(page);

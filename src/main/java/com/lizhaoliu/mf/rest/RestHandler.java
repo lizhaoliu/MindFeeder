@@ -17,7 +17,7 @@ import redis.clients.jedis.JedisPool;
 @RequestMapping("/rest")
 public class RestHandler {
 
-  private static final Logger LOGGER = Logger.getLogger(RestHandler.class);
+  private static final Logger logger = Logger.getLogger(RestHandler.class);
 
   private static final int PAGE_SIZE = 20;
 
@@ -41,7 +41,7 @@ public class RestHandler {
       final String jsonResp = jedis.get(key);
       if (jsonResp == null) {
         return newsEntryRepository.findAll(new PageRequest(page,
-          PAGE_SIZE, Sort.Direction.DESC, "dateTime"));
+            PAGE_SIZE, Sort.Direction.DESC, "dateTime"));
       }
       return jsonResp;
     } finally {

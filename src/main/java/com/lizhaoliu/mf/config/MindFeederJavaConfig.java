@@ -26,16 +26,16 @@ import java.net.URISyntaxException;
 public class MindFeederJavaConfig extends WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter {
 
   private static final String[] CLASSPATH_RESOURCE_LOCATIONS = {
-    "classpath:/META-INF/resources/",
-    "classpath:/resources/",
-    "classpath:/static/",
-    "classpath:/public/"
+      "classpath:/META-INF/resources/",
+      "classpath:/resources/",
+      "classpath:/static/",
+      "classpath:/public/"
   };
 
   @Bean
   @Scope(value = BeanDefinition.SCOPE_SINGLETON)
   public DataSource getDataSource() throws URISyntaxException {
-//    return new DriverManagerDataSource("jdbc:mysql://localhost:3306/mf", "username", "password"); // for local only
+//    return new DriverManagerDataSource("jdbc:mysql://localhost:3306/mf", "root", ""); // for local only
     URI dbUri = new URI(System.getenv("DATABASE_URL"));
     final String username = dbUri.getUserInfo().split(":")[0];
     final String password = dbUri.getUserInfo().split(":")[1];
@@ -55,10 +55,10 @@ public class MindFeederJavaConfig extends WebMvcAutoConfiguration.WebMvcAutoConf
 //    return new JedisPool("localhost", 6379);  // for local only
     URI redisURI = new URI(System.getenv("REDISTOGO_URL"));
     JedisPool pool = new JedisPool(new JedisPoolConfig(),
-      redisURI.getHost(),
-      redisURI.getPort(),
-      Protocol.DEFAULT_TIMEOUT,
-      redisURI.getUserInfo().split(":",2)[1]);
+        redisURI.getHost(),
+        redisURI.getPort(),
+        Protocol.DEFAULT_TIMEOUT,
+        redisURI.getUserInfo().split(":", 2)[1]);
     return pool;
   }
 

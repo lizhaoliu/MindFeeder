@@ -8,7 +8,7 @@ import javax.persistence.Id;
 import java.io.Serializable;
 
 /**
- * A news entry DTO
+ * DTO for a news entry
  */
 @Entity
 public class NewsEntry implements Serializable {
@@ -30,6 +30,9 @@ public class NewsEntry implements Serializable {
 
   @Column(unique = false, nullable = true)
   private String source;
+
+  @Column(unique = false, nullable = true)
+  private String favicon;
 
   public String getTitle() {
     return title;
@@ -63,14 +66,23 @@ public class NewsEntry implements Serializable {
     this.source = source;
   }
 
+  public String getFavicon() {
+    return favicon;
+  }
+
+  public void setFavicon(String favicon) {
+    this.favicon = favicon;
+  }
+
   @Override
   public String toString() {
     return "NewsEntry{" +
-      "id=" + id +
-      ", title='" + title + '\'' +
-      ", link='" + link + '\'' +
-      ", dateTime='" + dateTime + '\'' +
-      ", source='" + source + '\'' +
-      '}';
+        "id=" + id +
+        ", title='" + title + '\'' +
+        ", link='" + link + '\'' +
+        ", dateTime='" + dateTime + '\'' +
+        ", source='" + source + '\'' +
+        ", favicon='" + favicon + '\'' +
+        '}';
   }
 }

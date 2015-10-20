@@ -21,7 +21,7 @@ public class InfoQScraper extends AbstractWebScraper {
 
   @Nonnull
   @Override
-  List<NewsEntry> getEntitiesFromPage(@Nonnull WebDriver webDriver) {
+  protected List<NewsEntry> getEntitiesFromPage(WebDriver webDriver) {
     List<NewsEntry> results = new ArrayList<>();
     for (WebElement e : webDriver.findElements(By.className("news_type_block"))) {
       WebElement a = e.findElement(By.cssSelector("h2")).findElement(By.cssSelector("a"));
